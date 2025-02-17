@@ -16,7 +16,8 @@ git clone https://github.com/Zyphra/Zonos.git
 ```
 You will need to install eSpeak NG on your machine. 
 * **Windows**: You can install [eSpeak NG](https://github.com/espeak-ng/espeak-ng/releases/download/1.52.0/espeak-ng.msi) then have to set `PHONEMIZER_ESPEAK_LIBRARY=C:\Program Files\eSpeak NG\libespeak-ng.dll` in your environment variables, and restart your terminal.
-* **Linux**: You can install via `sudo apt-get install espeak-ng` then have to set `PHONEMIZER_ESPEAK_LIBRARY=/usr/lib/libespeak-ng.so` in your environment variables, and restart your terminal. 
+* **Linux**: You can install via `sudo apt-get install espeak-ng` then have to set `PHONEMIZER_ESPEAK_LIBRARY=/usr/lib/libespeak-ng.so` in your environment variables, and restart your terminal.
+* You may need to install [CUDA Toolkit](https://developer.nvidia.com/cuda-downloads) to use the GPU as well as [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) to compile.
 
 ### How To Use
 
@@ -32,6 +33,6 @@ You will need to install eSpeak NG on your machine.
 
 ### Special Thanks
 
-* [Zyphra](https://github.com/Zyphra-AI) for the Zonos model.
+* [Zyphra](https://github.com/Zyphra) for the Zonos model.
 * [niknah](https://github.com/niknah) for the F5-TTS node.
 * [sdbds](https://github.com/sdbds) for the Zonos-for-windows gradio_interface.py
