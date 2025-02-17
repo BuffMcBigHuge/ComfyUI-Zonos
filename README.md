@@ -12,6 +12,7 @@ ComfyUI node to make text to speech audio with your own voices.
 cd custom_nodes/ComfyUI-Zonos
 git submodule update --init --recursive
 pip install -r requirements.txt
+git clone https://github.com/Zyphra/Zonos.git
 ```
 You will need to install eSpeak NG on your machine. 
 * **Windows**: You can install [eSpeak NG](https://github.com/espeak-ng/espeak-ng/releases/download/1.52.0/espeak-ng.msi) then have to set `PHONEMIZER_ESPEAK_LIBRARY=C:\Program Files\eSpeak NG\libespeak-ng.dll` in your environment variables, and restart your terminal.
