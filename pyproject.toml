@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-zonos"
+description = "TTS with Zyphra Zonos"
+version = "1.0.0"
+license = {text = "MIT License"}
+
+[project.urls]
+Repository = "https://github.com/BuffMcBigHuge/ComfyUI-Zonos"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = "BuffMcBigHuge"
+DisplayName = "ComfyUI-Zonos"
+Icon = ""
