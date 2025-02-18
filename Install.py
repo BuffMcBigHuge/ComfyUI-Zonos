@@ -8,6 +8,7 @@ class Install:
     @staticmethod
     def check_install():
         if not os.path.exists(Install.zonosPath):
+            Install.clone()
             Install.install()
 
     @staticmethod
