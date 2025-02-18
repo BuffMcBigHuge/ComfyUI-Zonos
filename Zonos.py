@@ -26,7 +26,7 @@ sys.path.insert(0, zonos_path)
 
 Install.check_install()
 
-from zonos.model import Zonos
+from zonos.model import Zonos, DEFAULT_BACKBONE_CLS as DEFAULT_BACKBONE
 from zonos.conditioning import make_cond_dict, supported_language_codes
 from zonos.backbone import BACKBONES
 
@@ -259,6 +259,7 @@ class ZonosGenerate:
                 "speed": ("FLOAT", {
                     "default": 1.0,
                     "tooltip": s.tooltip_speed,
+                    "step": 0.01
                 }),
                 "disable_compiler": ("BOOLEAN", {
                     "default": True,
@@ -282,9 +283,12 @@ class ZonosGenerate:
     FUNCTION = "create_audio"
 
     def disable_torch_compiler(self):
-        """Disable PyTorch's inductor compiler"""
+        """Disable PyTorch's inductor compiler and configure C++ environment"""
+        # Configure PyTorch to avoid C++ compilation issues
         torch._dynamo.config.suppress_errors = True
         torch._inductor.config.fallback_random = True
+        torch._inductor.config.cpp.enable_kernel_profile = False
+        torch._inductor.config.triton.unique_kernel_names = True
         torch.backends.cudnn.enabled = True
         torch._dynamo.config.automatic_dynamic_shapes = False
         torch.set_float32_matmul_precision('high')
@@ -440,13 +444,24 @@ class ZonosGenerate:
         old_length = waveform.shape[-1]
         new_length = int(old_length / speed)
         
+        # Handle waveform dimensions properly
+        # Reshape to [batch, channel, time] format if needed
+        if waveform.dim() == 4:  # [batch, extra_dim, channels, time]
+            b, e, c, t = waveform.shape
+            waveform = waveform.reshape(b * e, c, t)
+        
         # Resample audio
         new_waveform = F.interpolate(
-            waveform.unsqueeze(1),
+            waveform,
             size=new_length,
             mode='linear',
             align_corners=False
-        ).squeeze(1)
+        )
+        
+        # Restore original shape if it was 4D
+        if audio['waveform'].dim() == 4:
+            b, e, c, _ = audio['waveform'].shape
+            new_waveform = new_waveform.reshape(b, e, c, new_length)
 
         return {"waveform": new_waveform, "sample_rate": rate}
 
