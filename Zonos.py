@@ -38,31 +38,71 @@ ZONOS_MODEL_PATH = os.path.join(folder_paths.models_dir, "zonos")
 os.makedirs(ZONOS_MODEL_PATH, exist_ok=True)
 
 def check_espeak_installation():
-    """Check espeak installation and return the path"""
-    try:
-        # First check if espeak is in PATH
-        espeak_path = shutil.which('espeak')
-        if espeak_path:
-            return espeak_path
-            
-        # Check common Windows installation paths
-        common_paths = [
-            r"C:\Program Files\eSpeak NG\espeak-ng.exe",
-            r"C:\Program Files (x86)\eSpeak NG\espeak-ng.exe",
-        ]
-        
-        for path in common_paths:
-            if os.path.exists(path):
-                # Verify it works by running a simple test
-                try:
-                    subprocess.run([path, "--version"], capture_output=True, text=True)
-                    return path
-                except:
-                    continue
-                    
-        return None
-    except Exception:
-        return None
+    """
+    Detects the installed espeak/espeak-ng executable and sets the
+    PHONEMIZER_ESPEAK_LIBRARY environment variable if not already set.
+
+    Returns:
+        str or None: The full path to the espeak/espeak-ng executable if found, otherwise None.
+    """
+    # If PHONEMIZER_ESPEAK_LIBRARY is already set, respect it
+    if "PHONEMIZER_ESPEAK_LIBRARY" in os.environ:
+        binary = shutil.which('espeak-ng') or shutil.which('espeak')
+        return binary
+
+    # Find espeak binary
+    binary = None
+    for name in ['espeak-ng', 'espeak']:
+        exe_path = shutil.which(name)
+        if exe_path and os.access(exe_path, os.X_OK):
+            binary = exe_path
+            break
+
+    if not binary:
+        if sys.platform == "win32":
+            # Check Windows install paths
+            windows_paths = [
+                r"C:\Program Files\eSpeak NG\espeak-ng.exe",
+                r"C:\Program Files (x86)\eSpeak NG\espeak-ng.exe",
+                r"C:\Program Files\eSpeak\espeak.exe",
+                r"C:\Program Files (x86)\eSpeak\espeak.exe"
+            ]
+            for path in windows_paths:
+                if os.path.isfile(path) and os.access(path, os.X_OK):
+                    binary = path
+                    # Check for DLL in same directory
+                    dll_path = os.path.join(os.path.dirname(path), "libespeak-ng.dll")
+                    if os.path.isfile(dll_path):
+                        os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = dll_path
+                    break
+        return binary
+
+    # For Linux/macOS, find the library using system commands
+    if sys.platform != "win32" and "PHONEMIZER_ESPEAK_LIBRARY" not in os.environ:
+        try:
+            # Try ldd first
+            ldd_output = subprocess.check_output(['ldd', binary], text=True)
+            for line in ldd_output.split('\n'):
+                if 'libespeak' in line:
+                    lib_path = line.split()[2]
+                    if os.path.exists(lib_path):
+                        os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = lib_path
+                        break
+        except (subprocess.SubprocessError, FileNotFoundError):
+            try:
+                # Try ldconfig -p as fallback
+                ldconfig_output = subprocess.check_output(['ldconfig', '-p'], text=True)
+                for line in ldconfig_output.split('\n'):
+                    if 'libespeak' in line:
+                        # Extract path from ldconfig output
+                        lib_path = line.split('=>')[-1].strip()
+                        if os.path.exists(lib_path):
+                            os.environ["PHONEMIZER_ESPEAK_LIBRARY"] = lib_path
+                            break
+            except (subprocess.SubprocessError, FileNotFoundError):
+                pass
+
+    return binary
 
 class ZonosGenerate:
     voice_reg = re.compile(r"\{([^\}]+)\}")
@@ -298,6 +338,9 @@ class ZonosGenerate:
                     language="en-us", cfg_scale=2.0, min_p=0.15,
                     speed=1.0, disable_compiler=True, prefix_audio=None, 
                     speaker_noised=False, emotion=None):        
+        # Initialize wave_file_name before try block
+        wave_file_name = None
+        
         try:
             # Only disable compiler if explicitly requested
             if disable_compiler:
