@@ -1,17 +1,17 @@
 {
-  "last_node_id": 23,
-  "last_link_id": 31,
+  "last_node_id": 24,
+  "last_link_id": 35,
   "nodes": [
     {
-      "id": 12,
-      "type": "LoadAudio",
+      "id": 22,
+      "type": "ZonosEmotion",
       "pos": [
-        -1297.8038330078125,
-        -1958.600341796875
+        379.0770263671875,
+        285.5378112792969
       ],
       "size": [
-        315,
-        124
+        309.4161071777344,
+        226
       ],
       "flags": {},
       "order": 0,
@@ -19,10 +19,139 @@
       "inputs": [],
       "outputs": [
         {
+          "name": "EMOTION",
+          "type": "EMOTION",
+          "links": [
+            34
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ZonosEmotion"
+      },
+      "widgets_values": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0.02,
+        0.1,
+        0.2
+      ]
+    },
+    {
+      "id": 24,
+      "type": "ZonosGenerate",
+      "pos": [
+        730,
+        80
+      ],
+      "size": [
+        403.350341796875,
+        576.3200073242188
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "sample_audio",
+          "type": "AUDIO",
+          "shape": 7,
+          "link": 35
+        },
+        {
+          "name": "prefix_audio",
+          "type": "AUDIO",
+          "shape": 7,
+          "link": null
+        },
+        {
+          "name": "emotion",
+          "type": "EMOTION",
+          "shape": 7,
+          "link": 34
+        }
+      ],
+      "outputs": [
+        {
           "name": "AUDIO",
           "type": "AUDIO",
           "links": [
-            27
+            32
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ZonosGenerate"
+      },
+      "widgets_values": [
+        "Hey there! This is pretty cool right?",
+        580,
+        "randomize",
+        "Zyphra/Zonos-v0.1-transformer",
+        "en-us",
+        2,
+        0.15,
+        1,
+        true,
+        "No, all that stuff, like you could have all the money in the world, all the followers, everything. It's just doesn't really make you happy.",
+        true
+      ]
+    },
+    {
+      "id": 13,
+      "type": "PreviewAudio",
+      "pos": [
+        1170,
+        150
+      ],
+      "size": [
+        341.8027648925781,
+        83.81747436523438
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 32
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewAudio"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 12,
+      "type": "LoadAudio",
+      "pos": [
+        370,
+        110
+      ],
+      "size": [
+        315,
+        124
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            35
           ],
           "slot_index": 0
         }
@@ -35,173 +164,46 @@
         "",
         ""
       ]
-    },
-    {
-      "id": 23,
-      "type": "ZonosGenerate",
-      "pos": [
-        -949.3067626953125,
-        -1980.9566650390625
-      ],
-      "size": [
-        392.1825256347656,
-        420.5397644042969
-      ],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "sample_audio",
-          "type": "AUDIO",
-          "link": 27
-        },
-        {
-          "name": "prefix_audio",
-          "type": "AUDIO",
-          "shape": 7,
-          "link": null
-        },
-        {
-          "name": "emotion",
-          "type": "EMOTION",
-          "shape": 7,
-          "link": 31
-        }
-      ],
-      "outputs": [
-        {
-          "name": "AUDIO",
-          "type": "AUDIO",
-          "links": [
-            29
-          ],
-          "slot_index": 0
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ZonosGenerate"
-      },
-      "widgets_values": [
-        "No, all that stuff, like you could have all the money in the world, all the followers, everything. It's just doesn't really make you happy.",
-        "hey there! this is pretty cool right?",
-        1228,
-        "randomize",
-        "Zyphra/Zonos-v0.1-transformer",
-        "en-us",
-        2,
-        0.15,
-        1,
-        true,
-        false
-      ]
-    },
-    {
-      "id": 22,
-      "type": "ZonosEmotion",
-      "pos": [
-        -1294.435302734375,
-        -1773.0108642578125
-      ],
-      "size": [
-        309.4161071777344,
-        226
-      ],
-      "flags": {},
-      "order": 1,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "EMOTION",
-          "type": "EMOTION",
-          "links": [
-            31
-          ],
-          "slot_index": 0
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ZonosEmotion"
-      },
-      "widgets_values": [
-        0,
-        0,
-        0,
-        0,
-        1,
-        0.05,
-        0.1,
-        0.2
-      ]
-    },
-    {
-      "id": 13,
-      "type": "PreviewAudio",
-      "pos": [
-        -528.8958129882812,
-        -1978.0126953125
-      ],
-      "size": [
-        319.4671325683594,
-        76
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "link": 29
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "Node name for S&R": "PreviewAudio"
-      },
-      "widgets_values": [
-        ""
-      ]
     }
   ],
   "links": [
     [
-      27,
-      12,
-      0,
-      23,
-      0,
-      "AUDIO"
-    ],
-    [
-      29,
-      23,
+      32,
+      24,
       0,
       13,
       0,
       "AUDIO"
     ],
     [
-      31,
+      34,
       22,
       0,
-      23,
+      24,
       2,
       "EMOTION"
+    ],
+    [
+      35,
+      12,
+      0,
+      24,
+      0,
+      "AUDIO"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.8140274938683991,
+      "scale": 0.8954302432552389,
       "offset": [
-        1370.4583040874832,
-        2205.4476724367983
+        -372.4289014982393,
+        84.20236382125421
       ]
     },
     "node_versions": {
+      "ComfyUI-Zonos": "a327fccca542a548d75b30a82d75662b53f3d479",
       "comfy-core": "0.3.14"
     }
   },

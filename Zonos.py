@@ -266,11 +266,6 @@ class ZonosGenerate:
         """Define input types for the node"""
         return {
             "required": {
-                "sample_audio": ("AUDIO",),
-                "sample_text": ("STRING", {
-                    "multiline": True,
-                    "default": "Text of sample_audio"
-                }),
                 "speech": ("STRING", {
                     "multiline": True,
                     "default": "This is what I want to say"
@@ -307,6 +302,11 @@ class ZonosGenerate:
                 }),
             },
             "optional": {
+                "sample_audio": ("AUDIO",),
+                "sample_text": ("STRING", {
+                    "multiline": True,
+                    "default": "Text of sample_audio"
+                }),
                 "prefix_audio": ("AUDIO", {
                     "tooltip": "Optional audio to continue from"
                 }),
@@ -333,13 +333,15 @@ class ZonosGenerate:
         torch._dynamo.config.automatic_dynamic_shapes = False
         torch.set_float32_matmul_precision('high')
 
-    def create_audio(self, sample_audio, sample_text, speech, seed=-1, 
+    def create_audio(self, sample_audio=None, sample_text=None, speech="", seed=-1, 
                     model_type="Zyphra/Zonos-v0.1-transformer", 
                     language="en-us", cfg_scale=2.0, min_p=0.15,
                     speed=1.0, disable_compiler=True, prefix_audio=None, 
                     speaker_noised=False, emotion=None):        
         # Initialize wave_file_name before try block
         wave_file_name = None
+        audio_hash = None
+        hasAudio = False
         
         try:
             # Only disable compiler if explicitly requested
@@ -358,34 +360,29 @@ class ZonosGenerate:
             # Set environment variable for phonemizer
             os.environ["PHONEMIZER_ESPEAK_PATH"] = espeak_path
 
-            # Create temporary wav file
-            wave_file = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
-            wave_file_name = wave_file.name
-            wave_file.close()
+            # Process sample audio if provided
+            if sample_audio is not None:
+                # Create temporary wav file
+                wave_file = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
+                wave_file_name = wave_file.name
+                wave_file.close()
 
-            # Process sample audio and save to temp file
-            hasAudio = False
-            for (batch_number, waveform) in enumerate(sample_audio["waveform"].cpu()):
-                # Compute hash of audio content
-                audio_hash = self.hash_audio(waveform, sample_audio["sample_rate"])
-                
-                buff = io.BytesIO()
-                torchaudio.save(buff, waveform, sample_audio["sample_rate"], format="WAV")
-                with open(wave_file_name, 'wb') as f:
-                    f.write(buff.getbuffer())
-                hasAudio = True
-                break
-                
-            if not hasAudio:
-                raise FileNotFoundError("No audio input")
+                for (batch_number, waveform) in enumerate(sample_audio["waveform"].cpu()):
+                    # Compute hash of audio content
+                    audio_hash = self.hash_audio(waveform, sample_audio["sample_rate"])
+                    
+                    buff = io.BytesIO()
+                    torchaudio.save(buff, waveform, sample_audio["sample_rate"], format="WAV")
+                    with open(wave_file_name, 'wb') as f:
+                        f.write(buff.getbuffer())
+                    hasAudio = True
+                    break
 
             # Get model and config paths
             model_path, config_path = self.get_model_path(model_type)
             
             # Cache model loading
             if self.CURRENT_MODEL_TYPE != model_type:
-                # TODO: Use model = mm.load_model(model, device)
-
                 if self.CURRENT_MODEL is not None:
                     del self.CURRENT_MODEL
                     torch.cuda.empty_cache()
@@ -401,16 +398,20 @@ class ZonosGenerate:
             
             model = self.CURRENT_MODEL
 
-            # Improve speaker embedding caching logic using content hash
-            if audio_hash != self.CURRENT_SPEAKER_HASH:
-                print("Recomputing speaker embedding...")
-                wav, sampling_rate = torchaudio.load(wave_file_name)
-                self.CURRENT_SPEAKER_EMBEDDING = model.make_speaker_embedding(wav, sampling_rate)
-                self.CURRENT_SPEAKER_EMBEDDING = self.CURRENT_SPEAKER_EMBEDDING.to(device, dtype=torch.bfloat16)
-                self.CURRENT_SPEAKER_HASH = audio_hash
-            
-            speaker = self.CURRENT_SPEAKER_EMBEDDING
-            
+            # Handle speaker embedding based on whether we have sample audio
+            if hasAudio:
+                # Improve speaker embedding caching logic using content hash
+                if audio_hash != self.CURRENT_SPEAKER_HASH:
+                    print("Computing speaker embedding from sample audio...")
+                    wav, sampling_rate = torchaudio.load(wave_file_name)
+                    self.CURRENT_SPEAKER_EMBEDDING = model.make_speaker_embedding(wav, sampling_rate)
+                    self.CURRENT_SPEAKER_EMBEDDING = self.CURRENT_SPEAKER_EMBEDDING.to(device, dtype=torch.bfloat16)
+                    self.CURRENT_SPEAKER_HASH = audio_hash
+                speaker = self.CURRENT_SPEAKER_EMBEDDING
+            else:
+                print("No sample audio provided, using default speaker...")
+                speaker = None
+
             main_voice = {
                 "speaker": speaker,
                 "language": language,
