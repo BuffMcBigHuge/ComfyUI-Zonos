@@ -174,7 +174,7 @@ class ZonosGenerate:
         reg1 = r"(?=\{[^\}]+\})"
         return re.split(reg1, speech)
 
-    def generate_audio(self, voices, chunks, seed, language="en-us", cfg_scale=2.0, min_p=0.15, audio_prefix_codes=None):
+    def generate_audio(self, voices, chunks, seed, language="en-us", pitch_std=20.0, speaking_rate=15.0, dnsmos_ovrl=4.0, cfg_scale=2.0, min_p=0.15, audio_prefix_codes=None):
         if seed >= 0:
             torch.manual_seed(seed)
         else:
@@ -225,6 +225,9 @@ class ZonosGenerate:
                 speaker=speaker,
                 language=voice_data.get("language", language),
                 emotion=emotion,
+                pitch_std=pitch_std,
+                speaking_rate=speaking_rate,
+                dnsmos_ovrl=dnsmos_ovrl,
                 speaker_noised=voice_data.get("speaker_noised", False)
             )
             
@@ -279,6 +282,24 @@ class ZonosGenerate:
                 }),
                 "model_type": (s.model_types,),
                 "language": (supported_language_codes,),
+                "pitch_std": ("FLOAT", {
+                    "default": 20.0,
+                    "min": 0.0,
+                    "max": 300.0,
+                    "step": 1.0
+                }),
+                "speaking_rate": ("FLOAT", {
+                    "default": 15.0,
+                    "min": 5.0,
+                    "max": 30.0,
+                    "step": 1.0
+                }),
+                "dnsmos_ovrl": ("FLOAT", {
+                    "default": 4.0,
+                    "min": 1.0,
+                    "max": 5.0,
+                    "step": 0.1
+                }),
                 "cfg_scale": ("FLOAT", {
                     "default": 2.0,
                     "min": 1.0,
@@ -335,7 +356,7 @@ class ZonosGenerate:
 
     def create_audio(self, sample_audio=None, sample_text=None, speech="", seed=-1, 
                     model_type="Zyphra/Zonos-v0.1-transformer", 
-                    language="en-us", cfg_scale=2.0, min_p=0.15,
+                    language="en-us", pitch_std=20.0, speaking_rate=15.0, dnsmos_ovrl=4.0, cfg_scale=2.0, min_p=0.15,
                     speed=1.0, disable_compiler=True, prefix_audio=None, 
                     speaker_noised=False, emotion=None):        
         # Initialize wave_file_name before try block
@@ -434,6 +455,9 @@ class ZonosGenerate:
             # Generate audio with all parameters
             waveform, sample_rate = self.generate_audio(
                 voices, chunks, seed, language,
+                pitch_std=pitch_std,
+                speaking_rate=speaking_rate,
+                dnsmos_ovrl=dnsmos_ovrl,
                 cfg_scale=cfg_scale,
                 min_p=min_p,
                 audio_prefix_codes=audio_prefix_codes
@@ -457,7 +481,7 @@ class ZonosGenerate:
         return (audio,)
 
     @classmethod
-    def IS_CHANGED(s, sample_audio, sample_text, speech, seed, model_type, language, 
+    def IS_CHANGED(s, sample_audio, sample_text, speech, seed, model_type, language, pitch_std, speaking_rate, dnsmos_ovrl,
                    cfg_scale, min_p, speed, disable_compiler=True, prefix_audio=None, 
                    speaker_noised=False, emotion=None):
         """Calculate hash for caching based on all input parameters"""
@@ -468,6 +492,9 @@ class ZonosGenerate:
         m.update(str(seed).encode())
         m.update(model_type.encode())
         m.update(language.encode())
+        m.update(str(pitch_std).encode())
+        m.update(str(speaking_rate).encode())
+        m.update(str(dnsmos_ovrl).encode())
         m.update(str(cfg_scale).encode())
         m.update(str(min_p).encode())
         m.update(str(speed).encode())
